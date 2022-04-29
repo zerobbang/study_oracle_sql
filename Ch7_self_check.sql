@@ -215,6 +215,12 @@ FROM (SELECT region,gubun
 GROUP BY region, gubun;
 
 -- 전체 
+-- 연산자 || 을 사용해서 값을 붙인다.
+-- RATIO_TO_REPORT : 전체 합계 대비 비율 반환
+-- RATIO_TO_REPORT * 100 : 백분율
+-- RATIO_TO_REPORT (컬럼) OVER () 형태
+-- 지역 별로 구분 되어야 하기 때문에 OVER 구문 안에 PARTITION BY region 해준다.
+-- 그리고 소수 2번째 자리에서 반올림 하기 위해 ROUND 를 사용한다. 
 WITH loan AS (SELECT region, gubun,
                        SUM(AMT1) AS AMT1, 
                        SUM(AMT2) AS AMT2, 
@@ -246,9 +252,3 @@ SELECT region,gubun
        , AMT7 || '( ' || ROUND(RATIO_TO_REPORT(amt7) OVER ( PARTITION BY REGION ),2) * 100 || '% )' AS "201311"
 FROM loan
 ORDER BY region;
--- 연산자 || 을 사용해서 값을 붙인다.
--- RATIO_TO_REPORT : 전체 합계 대비 비율 반환
--- RATIO_TO_REPORT * 100 : 백분율
--- RATIO_TO_REPORT (컬럼) OVER () 형태
--- 지역 별로 구분 되어야 하기 때문에 OVER 구문 안에 PARTITION BY region 해준다.
--- 그리고 소수 2번째 자리에서 반올림 하기 위해 ROUND 를 사용한다. 
