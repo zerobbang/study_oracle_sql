@@ -1,8 +1,6 @@
 -- TEST data name
 -- CITIES, TESTCOUNTRIES, ECONOMIES, POPULATION, SUMMER_MEDALS
 
--- 3/8
-
 
 -- SQL 서브쿼리 연습문제
 -- 문제 1. 2015년 평균 기대수명보다 높은 모든 정보를 조회하세요.
@@ -31,32 +29,44 @@ ORDER BY a.urbanarea_pop DESC;
 
 
 -- 문제 3. 
+-- 2015년도
 -- 조건 1. economies 테이블에서 country code, inflation rate, unemployment rate를 조회한다.
 -- 조건 2. inflation rate 오름차순으로 정렬한다.
 -- 조건 3. subquery_countries 테이블내 gov_form 컬럼에서 Constitutional Monarchy 또는 `Republic`이 들어간 국가는 제외한다.
 -- Select fields
 -- 데이터셋
-SELECT a.code, a.inflation_rate, a.unemployment_rate
-FROM economies a
-    , (SELECT code
-        FROM testcountries
-        WHERE gov_form NOT IN ('Constitutional Monarchy','Republic')) b
-WHERE a.code = b.code
-ORDER BY a.inflation_rate; 
-
-
-
-
+SELECT code, inflation_rate, unemployment_rate
+FROM economies
+  WHERE year = 2015 AND code NOT IN
+  	(SELECT code
+  	 FROM testcountries
+  	 WHERE (GOV_FORM = 'Constitutional Monarchy' OR GOV_FORM LIKE '%Republic%'))
+ORDER BY inflation_rate;
 
 
 -- 문제 4. 2015년 각 대륙별 inflation_rate가 가장 심한 국가와 inflation_rate를 구하세요. 
 -- 힌트 1. 아래 쿼리 실행
+-- 대륙별, 나라별 값
 SELECT country_name, continent, inflation_rate
-  FROM subquery_countries 
+  FROM testcountries 
   	INNER JOIN economies
     USING (code)
-WHERE year = 2010;
+WHERE year = 2015;
 -- 각 대륙별 inflation_rate가 가장 높은 나라를 추출하는 코드를 작성한다. 
+SELECT sc.country_name, sc.continent, ec.inflation_rate
+FROM testcountries sc
+	INNER JOIN economies ec
+	ON sc.code = ec.code
+WHERE year = 2015
+    AND inflation_rate IN (
+        SELECT MAX(inflation_rate) AS max_inf
+        FROM (
+             SELECT sc.country_name, sc.continent, ec.inflation_rate
+             FROM testcountries sc
+             INNER JOIN economies ec
+             ON sc.code = ec.code
+             WHERE year = 2015)
+        GROUP BY continent);
 
 
 
@@ -67,36 +77,18 @@ WHERE year = 2010;
 -- 문제 1. 각 행에 숫자를 1, 2, 3, ..., 형태로 추가한다. (row_n 으로 표시)
 -- row_n 기준으로 오름차순으로 출력
 -- 테이블명에 alias를 적용한다. 
-SELECT row_n , year, city, sport, discipline, athlete
-FROM 
-    (SELECT year , city, sport, discipline, athlete
-        , ROW_NUMBER () OVER (PARTITION BY city ORDER BY sport) AS row_n
-        FROM summer_medals
-        WHERE city = 'Paris'
-        GROUP BY year , city, sport, discipline, athlete ) 
-START WITH row_n = 1
-CONNECT BY  PRIOR row_n + 1 = row_n
-ORDER BY row_n, discipline;
+SELECT 
+    ROWNUM as row_n
+    , sm.*
+FROM summer_medals sm;
 
 
 
 -- 문제 2. 올림픽 년도를 오름차순 순번대로 작성을 한다. 
 -- 힌트 : 서브쿼리와 윈도우 함수를 이용한다. 
 SELECT year
-    , ROW_NUMBER() OVER (PARTITION BY year
-                            ORDER BY year) cnt                           
-FROM summer_medals
-GROUP BY year;
-
-SELECT year, cnt                           
-FROM (SELECT year
-        , ROW_NUMBER() OVER (PARTITION BY year
-                                ORDER BY year) cnt                           
-    FROM summer_medals)
-;
-         
-
-
+    , ROW_NUMBER() OVER (ORDER BY year) row_n                        
+FROM (SELECT DISTINCT year FROM summer_medals);
 
 
 -- 문제 3. 
@@ -105,23 +97,17 @@ FROM (SELECT year
 -- 상위 5개만 추출 : OFFSET 0 ROWS FETCH NEXT 5 ROWS ONLY
 -- WITH AS (1번 쿼리)
 -- 2번 쿼리
-SELECT medal, athlete, COUNT(medal) OVER (PARTITION BY athlete) as medals
-FROM summer_medals
-GROUP BY medal, athlete
-ORDER BY medals DESC;
+WITH medals AS (
+    SELECT athlete
+        , COUNT (*) AS medals
+    FROM summer_medals
+GROUP BY athlete)
+SELECT medals, athlete
+    , ROW_NUMBER() OVER (ORDER BY medals DESC) as row_n
+FROM medals
+ORDER BY medals desc
+OFFSET 0 ROWS FETCH NEXT 5 ROWS only;
 
-
-
-SELECT SUM(medals) medals
-    , athlete
-FROM (SELECT
-        COUNT(*) OVER (PARTITION BY athlete) as medals
-        , athlete
-    FROM (SELECT medal, athlete
-        FROM summer_medals))  
-GROUP BY athlete
-ORDER BY medals DESC
-OFFSET 0 ROWS FETCH NEXT 5 ROWS ONLY;
 
 
 -- 문제 4
@@ -139,14 +125,21 @@ SELECT
     
 -- 기존 쿼리에서 매년 전년도 챔피언도 같이 조회하도록 합니다.
 -- LAG & WITH 절 사용
-
-SELECT
+WITH Gold AS (
+  SELECT
     Year,
     Country AS champion
-    , LAG(Country, 1) OVER (ORDER BY year) AS LAST_CHAMPION
-FROM summer_medals
-WHERE
+  FROM summer_medals
+  WHERE
     Discipline = 'Weightlifting' AND
     Event = '69KG' AND
     Gender = 'Men' AND
-    Medal = 'Gold';
+    Medal = 'Gold')
+
+SELECT
+  Year, Champion,
+  LAG(Champion) OVER
+    (ORDER BY Year ASC) AS Last_Champion
+FROM Gold
+ORDER BY Year ASC;
+
