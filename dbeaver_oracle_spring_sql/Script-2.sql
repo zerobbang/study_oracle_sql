@@ -1,22 +1,22 @@
 SELECT SYSDATE FROM DUAL;
 
--- ¸ðµç À¯Àú È®ÀÎ
+-- ëª¨ë“  ìœ ì € í™•ì¸
 -- SELECT * FROM ALL_USERS;
 
--- ¿À¶óÅ¬ ¹öÀü È®ÀÎ
+-- ì˜¤ë¼í´ ë²„ì „ í™•ì¸
 -- SELECT * FROM V$VERSION;
 
--- 1. À¯Àú »ý¼º ¹®
--- CREATE USER ¾ÆÀÌµð IDENTIFIED BY ºñ¹ø;
--- 19cºÎÅÍ ¾ÆÀÌµð ¾Õ¿¡ c##À» Ãß°¡ÇØ¾ßÇÑ´Ù.
--- CREATE USER c##¾ÆÀÌµð IDENTIFIED BY ºñ¹ø;
--- À§ °úÁ¤À» ¾ø¾Ö±â À§ÇØ ´ÙÀ½À» ½ÇÇà ÈÄ ±×³É »ý¼º
+-- 1. ìœ ì € ìƒì„± ë¬¸
+-- CREATE USER ì•„ì´ë”” IDENTIFIED BY ë¹„ë²ˆ;
+-- 19cë¶€í„° ì•„ì´ë”” ì•žì— c##ì„ ì¶”ê°€í•´ì•¼í•œë‹¤.
+-- CREATE USER c##ì•„ì´ë”” IDENTIFIED BY ë¹„ë²ˆ;
+-- ìœ„ ê³¼ì •ì„ ì—†ì• ê¸° ìœ„í•´ ë‹¤ìŒì„ ì‹¤í–‰ í›„ ê·¸ëƒ¥ ìƒì„±
 ALTER SESSION SET "_ORACLE_SCRIPT"=TRUE;
 CREATE USER zerobbang IDENTIFIED BY zero123;
--- À¯Àú »è¼¼
+-- ìœ ì € ì‚­ì„¸
 -- DROP USER zerobbang;
 
--- 2. ±ÇÇÑ ÁÖ±â
--- with grant option : À¯Àú°¡ °¡Áö°Ô µÉ ±ÇÇÑÀ» ´Ù¸¥ »ç¶÷¿¡°Ô ºÎ¿©ÇÒ ±ÇÇÑ±îÁö Æ÷ÇÔÇÑ´Ù.
-GRANT ALL PRIVILEGES TO zerobbang;
+-- 2. ê¶Œí•œ ì£¼ê¸°
+-- with grant option : ìœ ì €ê°€ ê°€ì§€ê²Œ ë  ê¶Œí•œì„ ë‹¤ë¥¸ ì‚¬ëžŒì—ê²Œ ë¶€ì—¬í•  ê¶Œí•œê¹Œì§€ í¬í•¨í•œë‹¤.
+-- GRANT ALL PRIVILEGES on : ìœ ì €ê°€ dbì— ì ‘ê·¼ ê°€ëŠ¥í•˜ê²Œ ë¶€ì—¬í•œë‹¤.
 GRANT CONNECT, dba, resource TO zerobbang;
